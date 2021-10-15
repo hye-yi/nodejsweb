@@ -54,3 +54,13 @@ app.get('/list', function (요청, 응답) {
         응답.render('list.ejs', { posts: 결과 })
     })
 })
+
+app.delete('/delete',function(req, res){
+    console.log(req.body);
+    req.body._id = parseInt(req.body._id);
+
+    db.collection('post').deleteOne(req.body,function(에러, 결과){
+        console.log('삭제완료')
+        res.status(200).send({message:'성공'});//응답코드 200을 보냄
+    })
+});
