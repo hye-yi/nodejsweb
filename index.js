@@ -6,6 +6,8 @@ app.set('view engine', 'ejs');
 const MongoClient = require('mongodb').MongoClient;
 
 app.use('/public', express.static('public'));
+const methodOverride = require('method-override')
+app.use(methodOverride('_method'))
 
 var db;
 
@@ -79,14 +81,21 @@ app.get('/detail/:id',function(req,res){
     })
 })
 
-app.get('/edit/:id', function (req,res) {
-    db.collection('post').findOne({_id : parseInt(req.params.id)}, function(error, result){
+app.get('/edit/:id', function (req, res) {
+    db.collection('post').findOne({ _id: parseInt(req.params.id) }, function (error, result) {
         console.log(result)
-        if(error){
+        if (error) {
             console.log(error);
             res.status(404).send('데이터없음')
             return;
         }
-        res.render('edit.ejs',{post:result})
+        res.render('edit.ejs', { post: result })
+    })
+})
+
+app.put('/edit',function(req, res){
+    db.collection('post').updateOne({_id : parseInt(req.body.id)},{$set : {name : req.body.name, age : req.body.age}},function(error, result){
+        console.log('수정완료')
+        res.redirect('/list')
     })
 })
