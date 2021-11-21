@@ -1,9 +1,11 @@
 const express = require('express')
 const app = express()
-const url = 'mongodb://hyeri:1234@13.72.117.233:27017/?authSource=admin';
+const url = 'mongodb+srv://hyeri:1234@hrcluster.a0jj7.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
 app.use(express.urlencoded({ extended: true }))
 app.set('view engine', 'ejs');
 const MongoClient = require('mongodb').MongoClient;
+
+app.use('/public', express.static('public'));
 
 var db;
 
@@ -12,9 +14,9 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
         console.log(error);
         return;
     }
-    db = client.db('apple_db');
+    db = client.db('todoapp');
 
-    db.collection('apple').insertOne({ 이름: 'John', _id: 100 }, (error, result) => {
+    db.collection('post').insertOne({ 이름: 'John', _id: 100 }, (error, result) => {
         console.log('저장완료');
     });
 
@@ -28,7 +30,7 @@ app.get('/', (요청, 응답) => {
 })
 
 app.get('/write', function (요청, 응답) {
-    응답.sendFile(__dirname + '/write.html')
+    응답.render('write.ejs')
 });
 
 app.post('/add', (req, res) => {
@@ -64,3 +66,27 @@ app.delete('/delete',function(req, res){
         res.status(200).send({message:'성공'});//응답코드 200을 보냄
     })
 });
+
+app.get('/detail/:id',function(req,res){
+    db.collection('post').findOne({_id:parseInt(req.params.id)},function(error,result){
+        console.log(result);
+        if(error){
+            console.log(error);
+            res.status(404).send('데이터없음')
+            return;
+        }
+        res.render('detail.ejs',{data:result});
+    })
+})
+
+app.get('/edit/:id', function (req,res) {
+    db.collection('post').findOne({_id : parseInt(req.params.id)}, function(error, result){
+        console.log(result)
+        if(error){
+            console.log(error);
+            res.status(404).send('데이터없음')
+            return;
+        }
+        res.render('edit.ejs',{post:result})
+    })
+})
