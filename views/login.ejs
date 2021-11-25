@@ -14,14 +14,28 @@
   <div class="container mt-3">
     <form action="/login" method="POST">
       <div class="form-group">
-        <label>ID</label>
+        <legend>ID</legend>
         <input type="text" class="form-control" name="id">
       </div>
       <div class="form-group">
-        <label>PASSWORD</label>
+        <legend>PASSWORD</legend>
         <input type="text" class="form-control" name="pw">
       </div>
       <button type="submit" class="btn btn-dark">LOGIN</button>
+    </form>
+  </div>
+
+  <div class="container mt-4">
+    <form action="/register" method="POST">
+      <div class="form-group">
+        <legend>ID</legend>
+        <input type="text" class="form-control" name="id">
+      </div>
+      <div class="form-group">
+        <legend>PASSWORD</legend>
+        <input type="password" class="form-control" name="pw">
+      </div>
+      <button type="submit" class="btn btn-danger">가입</button>
     </form>
   </div>
 

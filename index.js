@@ -1,9 +1,9 @@
 const express = require('express')
 const app = express()
-require('dotenv').config()
 app.use(express.urlencoded({ extended: true }))
 app.set('view engine', 'ejs');
 const MongoClient = require('mongodb').MongoClient;
+require('dotenv').config()
 
 app.use('/public', express.static('public'));
 const methodOverride = require('method-override')
@@ -11,7 +11,7 @@ app.use(methodOverride('_method'))
 
 var db;
 
-MongoClient.connect(process.env.URL, { useUnifiedTopology: true }, (error, client) => {
+MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, client) => {
     if (error) {
         console.log(error);
         return;
@@ -148,7 +148,12 @@ passport.deserializeUser((inputid, done) => {
       done(null, result)
     })
   }); 
-  
+
+app.post('/register', (req, res) => {
+    db.collection('login').insertOne({ id: req.body.id, pw: req.body.pw }, (error, result) => {
+        res.redirect('/')
+    })
+})
 
 app.get('/mypage',loginfc, (req,res)=>{
     console.log(req.user);
@@ -169,3 +174,21 @@ app.get('/logout', (req, res) => {
     req.logout()
     res.send('로그아웃 되셨습니다.')
 })
+
+app.get('/search', (req, res)=>{
+    var 검색조건 = [
+        {
+          $search: {
+            index: 'name_Search',
+            text: {
+              query: req.query.value,
+              path: 'name'  // 어떤 항목에서 찾고싶은지
+            }
+          }
+        }
+      ] 
+      db.collection('post').aggregate(검색조건).toArray((error, result)=>{
+        console.log(result)
+        res.render('search.ejs', {posts : result})
+      })
+    })
