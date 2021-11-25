@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express()
-const url = 'mongodb+srv://hyeri:1234@hrcluster.a0jj7.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+require('dotenv').config()
 app.use(express.urlencoded({ extended: true }))
 app.set('view engine', 'ejs');
 const MongoClient = require('mongodb').MongoClient;
@@ -11,7 +11,7 @@ app.use(methodOverride('_method'))
 
 var db;
 
-MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
+MongoClient.connect(process.env.URL, { useUnifiedTopology: true }, (error, client) => {
     if (error) {
         console.log(error);
         return;
@@ -22,7 +22,7 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
         console.log('저장완료');
     });
 
-    app.listen(8080, function () {
+    app.listen(process.env.PORT, function () {
         console.log('listening on 8080')
     });
 });
@@ -98,4 +98,74 @@ app.put('/edit',function(req, res){
         console.log('수정완료')
         res.redirect('/list')
     })
+})
+
+
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+
+app.use(session({secret : '비밀코드', resave : true, saveUninitialized: false}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+app.get('/login',(req,res)=>{
+    res.render('login.ejs')
+})
+
+app.post('/login',passport.authenticate('local',{failureRedirect : '/fail'}),(req,res)=>{
+    res.redirect('/')
+})
+
+app.get('/fail',(req,res)=>{
+    res.render('loginfail.ejs')
+})
+
+passport.use(new LocalStrategy({
+    usernameField: 'id',
+    passwordField: 'pw',
+    session: true,
+    passReqToCallback: false,
+}, (inputid, inputpw, done) => {
+    db.collection('login').findOne({ id: inputid }, (error, result) => {
+        if (error) return done(error)
+        if (!result) return done(null, false, { message: '존재하지 않는 아이디' })
+        if (inputpw == result.pw) {
+            return done(null, result)
+        } else {
+            return done(null, false, { message: '비번틀렸어요' })
+        }
+    })
+}));
+
+passport.serializeUser((user, done) => {
+    done(null, user.id)
+  });
+
+passport.deserializeUser((inputid, done) => {
+    db.collection('login').findOne({ id: inputid }, (error, result) => {
+      done(null, result)
+    })
+  }); 
+  
+
+app.get('/mypage',loginfc, (req,res)=>{
+    console.log(req.user);
+    res.render('mypage.ejs')
+})
+
+function loginfc(req, res, next){
+    if(req.user){
+        next()
+    }
+    else{
+        res.send('로그인하세요')
+    }
+}
+
+app.get('/logout', (req, res) => {
+    console.log('logout')
+    req.logout()
+    res.send('로그아웃 되셨습니다.')
 })
