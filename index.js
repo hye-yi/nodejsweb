@@ -35,22 +35,7 @@ app.get('/write', function (요청, 응답) {
     응답.render('write.ejs')
 });
 
-app.post('/add', (req, res) => {
-    db.collection('counter').findOne({ name: '게시물갯수' }, function (error, result) {
-        var 총게시물갯수 = result.totalpost
 
-        db.collection('post').insertOne({_id: 총게시물갯수 + 1, name : req.body.name, age : req.body.age},(error,result)=>{
-            db.collection('counter').updateOne({name : '게시물갯수'},{$inc: {totalpost:1}},(error,result)=>{
-                if(error){
-                    console.log(error);
-                    return;
-                }
-                res.send('전송완료');
-            })
-        });
-    });
-
-});
 
 app.get('/list', function (요청, 응답) {
     db.collection('post').find().toArray((에러, 결과) => {
@@ -58,16 +43,6 @@ app.get('/list', function (요청, 응답) {
         응답.render('list.ejs', { posts: 결과 })
     })
 })
-
-app.delete('/delete',function(req, res){
-    console.log(req.body);
-    req.body._id = parseInt(req.body._id);
-
-    db.collection('post').deleteOne(req.body,function(에러, 결과){
-        console.log('삭제완료')
-        res.status(200).send({message:'성공'});//응답코드 200을 보냄
-    })
-});
 
 app.get('/detail/:id',function(req,res){
     db.collection('post').findOne({_id:parseInt(req.params.id)},function(error,result){
@@ -150,21 +125,57 @@ passport.deserializeUser((inputid, done) => {
   }); 
 
 app.post('/register', (req, res) => {
-    db.collection('login').insertOne({ id: req.body.id, pw: req.body.pw }, (error, result) => {
-        res.redirect('/')
+    db.collection('login').findOne({ id: req.body.id }, (error, result) => {
+        if (result) {
+            res.send('아이디 중복입니다')
+            return;
+        }
+        else {
+            db.collection('login').insertOne({ id: req.body.id, pw: req.body.pw }, (error, result) => {
+                res.redirect('/')
+            })
+        }
     })
 })
+
+app.post('/add', (req, res) => {
+    db.collection('counter').findOne({ name: '게시물갯수' }, function (error, result) {
+        var 총게시물갯수 = result.totalpost;
+        var post = {_id: 총게시물갯수 + 1,  작성자:req.user._id, name : req.body.name, age : req.body.age, 날짜 : new Date()}
+        
+        db.collection('post').insertOne(post,(error,result)=>{
+            db.collection('counter').updateOne({name : '게시물갯수'},{$inc: {totalpost:1}},(error,result)=>{
+                if(error){
+                    console.log(error);
+                    return;
+                }
+                res.send('전송완료');
+            })
+        });
+    });
+
+});
+
+app.delete('/delete', function (req, res) {
+    console.log(req.body);
+    req.body._id = parseInt(req.body._id);
+
+    db.collection('post').deleteOne({_id: req.body._id, 작성자: req.user._id}, function (에러, 결과) {
+        console.log('삭제완료')
+        res.status(200).send({ message: '성공' });//응답코드 200을 보냄
+    })
+});
 
 app.get('/mypage',loginfc, (req,res)=>{
     console.log(req.user);
     res.render('mypage.ejs')
 })
 
-function loginfc(req, res, next){
-    if(req.user){
+function loginfc(req, res, next) {
+    if (req.user) {
         next()
     }
-    else{
+    else {
         res.send('로그인하세요')
     }
 }
