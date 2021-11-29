@@ -9,6 +9,7 @@ app.use('/public', express.static('public'));
 const methodOverride = require('method-override')
 app.use(methodOverride('_method'))
 
+
 var db;
 
 MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, client) => {
@@ -202,4 +203,22 @@ app.get('/search', (req, res)=>{
         console.log(result)
         res.render('search.ejs', {posts : result})
       })
+    })
+
+    app.get('/chat',loginfc, (req,res)=>{
+        db.collection('chatroom').find({ member : req.user._id }).toArray().then((result)=>{
+            console.log(result);
+            res.render('chat.ejs', {data : result})
+          })
+    })
+
+    app.post('/chatroom',(req,res)=>{
+        var chatroomdata = {
+            title : 'chatroom name',
+            member : [ObjectId(req.body.당한사람id), req.user._id],
+            date : new Date()
+        }
+        db.collection('post').insertOne(chatroomdata).then ((result)=> {
+            console.log('저장완료');
+        });
     })
