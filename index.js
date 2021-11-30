@@ -9,6 +9,7 @@ app.use('/public', express.static('public'));
 const methodOverride = require('method-override')
 app.use(methodOverride('_method'))
 
+const {ObjectId} = require('mongodb');
 
 var db;
 
@@ -18,10 +19,6 @@ MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, cl
         return;
     }
     db = client.db('todoapp');
-
-    db.collection('post').insertOne({ 이름: 'John', _id: 100 }, (error, result) => {
-        console.log('저장완료');
-    });
 
     app.listen(process.env.PORT, function () {
         console.log('listening on 8080')
@@ -212,13 +209,19 @@ app.get('/search', (req, res)=>{
           })
     })
 
-    app.post('/chatroom',(req,res)=>{
-        var chatroomdata = {
+    app.post('/chatroom', loginfc, (req,res)=>{
+        const chatroomdata = {
             title : 'chatroom name',
             member : [ObjectId(req.body.당한사람id), req.user._id],
             date : new Date()
         }
-        db.collection('post').insertOne(chatroomdata).then ((result)=> {
-            console.log('저장완료');
+        db.collection('chatroom').insertOne(chatroomdata).then ((result)=> {
+            res.send('저장완료');
         });
+    })
+
+    app.get('/chat',loginfc, (req, res)=>{
+        db.collection('chatroom').find({member:req.user._id}).toArray().then((result)=>{
+            res.render('chat.ejs',{data:result})
+        })
     })

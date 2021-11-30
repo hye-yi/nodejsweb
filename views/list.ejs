@@ -41,7 +41,7 @@
                         <p> 나이 : <%= posts[i].age %>
                         </p>
                         <button class="btn btn-danger delete" data-id="<%= posts[i]._id %>">삭제</button>
-                        <button class="btn btn-secondary chat" data-id="<%= posts[i]._id %>">채팅 시작하기</button>
+                        <button class="btn btn-secondary chat" data-id="<%= posts[i].작성자 %>">채팅 시작하기</button>
                     </li>
                     <% } %>
             </ul>
@@ -66,15 +66,15 @@
             })
 
         </script>
-<script>
-    $('.chat').click(function(e){
-      var _id = e.target.dataset.id;
-      $.post('/chatroom', {당한사람id : _id})
-      .then(()=>{
-        console.log('채팅방 게시물 생성완료')
-      })
-    });
-</script>
+        <script>
+            $('.chat').click(function (e) {
+                var _id = e.target.dataset.id;
+                $.post('/chatroom', { 당한사람id: _id })
+                    .then(() => {
+                        console.log('채팅방 게시물 생성완료')
+                    })
+            });
+        </script>
 
         <!-- Optional JavaScript; choose one of the two! -->
 
