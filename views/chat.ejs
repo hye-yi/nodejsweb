@@ -49,9 +49,7 @@
            <div class="col-9 p-0">
              <div class="chat-room">
                 <ul class="list-group chat-content">
-                  <li><span class="chat-box">채팅방1 내용</span></li>
-                  <li><span class="chat-box">채팅방1 내용</span></li>
-                  <li><span class="chat-box mine">채팅방1 내용</span></li>
+
                 </ul>
               <div class="input-group">
                 <input class="form-control" id="chat-input">
@@ -65,23 +63,42 @@
       <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
       <script>
-        var chatroomid;
+        var chatroomid;   //지금 누른 채팅방id
+        var eventSource;
         $('.list-group-item').click(function () {
-            $(this).css('background-color', '#eee');
-            chatroomid = $(this).attr('data-id');
-            console.log('hh')
-          });
-          
-          $('#send').click(function(){
-            var chatdata = $('#chat-input').val();
-            var sendmessage = {
-              parent:chatroomid,
-              content:chatdata
-            }
-            $.post('/message', sendmessage).then((result) => {
-              console.log(result)
+          chatroomid = this.dataset.id;
+
+          if (eventSource != undefined){
+            eventSource.close()
+          }       //채팅방 누르때마다 계속 소통채널에 입장. 이미 개설되어 있으면 이벤트 종료하도록
+
+          $('.chat-content').html('')     //클릭할때마다 일단 화면에 메세지들 전부 비우기
+
+          //프론트엔드에서 실시간 소통채널 여는법
+          eventSource = new EventSource('/message/' + chatroomid);
+          eventSource.addEventListener('test', function (e) {
+            
+            var dbmessagedata = JSON.parse(e.data);
+            console.log(dbmessagedata);
+            dbmessagedata.forEach((a) => {      //반복문
+              $('.chat-content').append(`<li><span class="chat-box">${a.content}</span></li>`) //가져온 메세지만큼 li태그달린 html이 표시됨(메세지가 대화창에 보임)
             });
+
+
           });
+          $(this).css('background-color', '#eee');
+        });
+
+        $('#send').click(function () {
+          var chatdata = $('#chat-input').val();
+          var sendmessage = {
+            parent: chatroomid,
+            content: chatdata
+          }
+          $.post('/message', sendmessage).then((result) => {
+            console.log(result)
+          });
+        });
 
       </script>
 </body>

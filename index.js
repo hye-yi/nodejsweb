@@ -11,6 +11,10 @@ app.use(methodOverride('_method'))
 
 const {ObjectId} = require('mongodb');
 
+const http = require('http').createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(http);
+
 var db;
 
 MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, client) => {
@@ -20,7 +24,7 @@ MongoClient.connect(process.env.DB_URL, { useUnifiedTopology: true }, (error, cl
     }
     db = client.db('todoapp');
 
-    app.listen(process.env.PORT, function () {
+    http.listen(process.env.PORT, function () {
         console.log('listening on 8080')
     });
 });
@@ -88,7 +92,7 @@ app.get('/login',(req,res)=>{
 })
 
 app.post('/login',passport.authenticate('local',{failureRedirect : '/fail'}),(req,res)=>{
-    res.redirect('/')
+    res.redirect('/chat')
 })
 
 app.get('/fail',(req,res)=>{
@@ -234,11 +238,37 @@ app.get('/search', (req, res)=>{
             date : new Date()
         }
         db.collection('message').insertOne(savemessage).then((result)=>{
-            if (error) {
-                console.log(error);
-                return;
-            }
             res.send(result);
             console.log('DB 저장 성공')
         })
     });
+
+    app.get('/message/:parentid', loginfc, function(req, res){
+
+        res.writeHead(200, {
+          "Connection": "keep-alive",
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+        });
+      
+        db.collection('message').find({ parent: req.params.parentid }).toArray()
+        .then((result)=>{
+          console.log(result);
+          res.write('event: test\n');
+          res.write(`data: ${JSON.stringify(result)}\n\n`);
+        });
+        
+        const 찾을문서 = [
+            { $match: { 'fullDocument.parent': req.params.parentid } } //이 조건에 만족하는 document만 감시하고 있음
+        ];
+
+        const changeStream = db.collection('message').watch(찾을문서); //watch(찾을문서)를 붙여줌 -> 찾을 문서를 실시간 감시해줌
+
+        changeStream.on('change', (result) => {         //이벤트리스너를 붙여서 DB에 변동사항 생길때마다 콜백함수 내부 코드 실행
+            console.log(result.fullDocument);           //변동사항은 result.fullDocument 안에 저장됨
+            var 추가된문서 = [result.fullDocument];      //서버에서 document 다 찾아서 보낼 때 [{},{},..] 이런모양이여서 []로 감싸줌
+            res.write('event: test\n');
+            res.write(`data: ${JSON.stringify(추가된문서)}\n\n`);
+        });
+
+      });
