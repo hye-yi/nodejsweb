@@ -37,11 +37,11 @@
         <div class="row">
           <div class="col-3">
             <ul class="list-group chat-list">
-              <% for (let i =0; i<data.length; i++){ %>
-              <li class="list-group-item" data-id="<%= data[i]._id %>">
+              <% for (let i =0; i < data.length; i++){ %>
+                <li class="list-group-item" data-id="<%= data[i]._id %>">
                 <h6><%= data[i].title %></h6>
-                <h6 class="text-small">?</h6>
-              </li>
+                <h6 class="text-small"><%= data[i].member[0] %></h6>
+                </li>
               <% } %>
              </ul>
            </div>
@@ -62,24 +62,26 @@
         </div>
       </div> 
 
-      <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+      <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
       <script>
         var chatroomid;
-        $('.list-group-item').click(()=>{
-          chatroomid=this.dataset.id;
-        })
+        $('.list-group-item').click(function () {
+            $(this).css('background-color', '#eee');
+            chatroomid = $(this).attr('data-id');
+            console.log('hh')
+          });
+          
           $('#send').click(function(){
             var chatdata = $('#chat-input').val();
             var sendmessage = {
-              parent=,
-              content=chatdata
+              parent:chatroomid,
+              content:chatdata
             }
-            $.post('/message',{}).then(()=>{
-              console.log('메세지 전송 성공')
-            })
-          }
-
+            $.post('/message', sendmessage).then((result) => {
+              console.log(result)
+            });
+          });
 
       </script>
 </body>

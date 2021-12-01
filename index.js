@@ -225,3 +225,20 @@ app.get('/search', (req, res)=>{
             res.render('chat.ejs',{data:result})
         })
     })
+
+    app.post('/message',loginfc, (req,res)=>{
+        var savemessage = {
+            parent : req.body.parent,
+            content : req.body.content,
+            userid : req.user.id,
+            date : new Date()
+        }
+        db.collection('message').insertOne(savemessage).then((result)=>{
+            if (error) {
+                console.log(error);
+                return;
+            }
+            res.send(result);
+            console.log('DB 저장 성공')
+        })
+    });
