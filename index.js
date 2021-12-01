@@ -272,3 +272,14 @@ app.get('/search', (req, res)=>{
         });
 
       });
+
+      app.get('/socket',(req,res)=>{
+          res.render('socket.ejs')
+      })
+      io.on('connection', function (socket) {       //소켓이 연결되면
+        console.log('소켓 연결됨');
+        socket.on('user-send', function (data) {        //user-send라는 이벤트가 발생하면(user-send 유저가 메세지를 보내면) 함수실행, data엔 유저가 보낸 글이 들어있음(위에 hi hi가 들어감)
+          io.emit('broadcast', data)  //모든사람에게 유저가 보낸 data 전송
+        });
+       
+      });
