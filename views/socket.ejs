@@ -15,16 +15,30 @@
 
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.js"></script>
-      <script>
-        var socket = io();
-        $('#send').click(function(){
-          socket.emit('user-send','hi hi')     //user-send라는 이벤트명으로 hihi라는 데이터를 보냄
-        });
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <div>채팅방</div>
+    <input id="input1">
+    <div id="content"></div>
+    <button id="send">서버에 메세지 보내기</button>
+    <button id="room1">채팅방1 입장</button>
+    <button id="room1-send">채팅방1에 메세지 전송</button>
 
-        socket.on('broadcast', function(data) {  //서버가 io.emit()한걸 수신할때 이벤트 리스너 필요
-            $('#content').append('<div>' + data + '</div>')     //서버가 io.emit()으로 보낼 때마다 그 데이터를 수신함
-        })                                                     //유저는 'broadcast' 이름의 데이터가 도착하면 html로 만들어줌
-      </script>
+    <script>
+      var socket = io();
+      $('#send').click(function(){
+        socket.emit('user-send', $('#input1').val())     //user-send라는 이벤트명으로 hihi라는 데이터를 보냄
+      });
+
+      socket.on('broadcast', function (data) {  //서버가 io.emit()한걸 수신할때 이벤트 리스너 필요
+        $('#content').append('<div>' + data + '</div>')     //서버가 io.emit()으로 보낼 때마다 그 데이터를 수신함
+      })                                                     //유저는 'broadcast' 이름의 데이터가 도착하면 html로 만들어줌
+      $('#room1').click(function(){
+        socket.emit('joinroom')
+      });
+      $('#room1-send').click(function(){
+        socket.emit('room1-send','채팅방1 입장')
+      });
+    </script>
 
 
 
